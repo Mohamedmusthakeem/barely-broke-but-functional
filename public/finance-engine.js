@@ -8,6 +8,11 @@
   const sum = (xs, fn) => xs.reduce((paise,x)=>Math.min(Number.MAX_SAFE_INTEGER,paise+Math.round(n(fn(x))*100)),0)/100;
   const dateOnly = d => { const x=new Date(d); if(Number.isNaN(x.getTime())) return null; x.setHours(0,0,0,0); return x; };
   const dayKey = d => { const x=new Date(d); return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0'); };
+  const isValidDateKey = value => {
+    if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+    const x=new Date(value+'T00:00:00');
+    return Number.isFinite(x.getTime())&&dayKey(x)===value;
+  };
   const addMonth = d => { const x=new Date(d); const day=x.getDate(); x.setDate(1); x.setMonth(x.getMonth()+1); const last=new Date(x.getFullYear(),x.getMonth()+1,0).getDate(); x.setDate(Math.min(day,last)); return x; };
   const clamp=(v,min,max)=>Math.min(max,Math.max(min,v));
   function calculate(data, now=new Date()){
@@ -89,5 +94,5 @@
       theme:['system','light','dark'].includes(d.theme)?d.theme:defaults.theme
     };
   }
-  window.BarelyFinance={calculate,validateState,amount:n,dayKey};
+  window.BarelyFinance={calculate,validateState,amount:n,dayKey,isValidDateKey};
 })();

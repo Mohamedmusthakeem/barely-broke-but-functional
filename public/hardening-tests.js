@@ -15,6 +15,8 @@ button.addEventListener("click",()=>{
   const nowKey=today(),base=defaults();
   const empty=engine.calculate(base,now);
   assert("Default ₹10,000 and 30-day state",base.budget===10000&&base.days===30&&empty.balance===10000&&Math.abs(empty.daily-10000/30)<1e-9,JSON.stringify({balance:empty.balance,daily:empty.daily}));
+  assert("Strict date validator accepts a valid calendar date",engine.isValidDateKey("2026-10-11")&&engine.isValidDateKey("2028-02-29"),"valid ordinary and leap-day dates should pass");
+  assert("Strict date validator rejects impossible and malformed dates",!engine.isValidDateKey("2026-02-29")&&!engine.isValidDateKey("2026-13-01")&&!engine.isValidDateKey("tomorrow"),"impossible calendar dates should fail");
   const cents=engine.calculate({...base,transactions:Array.from({length:100},(_,i)=>({id:"c"+i,name:"cent",amount:.01,type:"expense",category:"Food",date:nowKey,status:"posted"}))},now);
   assert("Integer-paise summation",cents.spent===1&&cents.balance===9999,"Expected ₹1.00 spent, got ₹"+cents.spent);
   const incomeExpense=engine.calculate({...base,transactions:[{id:"i",amount:300,type:"income",date:nowKey},{id:"e",amount:100,type:"expense",date:nowKey}]},now);
