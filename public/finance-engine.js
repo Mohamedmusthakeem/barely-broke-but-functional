@@ -41,7 +41,7 @@
         while(next<=end&&guard++<14){forecastCommitments+=amount;next=addMonth(next);}
       } else if(due<=end) forecastCommitments+=amount;
     });
-    bills.filter(b=>b&&b.recurring&&b.paid&&!b.cancelled&&!b.paused).forEach(b=>{let next=dateOnly(b.due||today)||today,guard=0;while(next<=end&&guard++<14){forecastCommitments+=n(b.amount);next=addMonth(next);}});
+    bills.filter(b=>b&&b.recurring&&b.paid&&!b.cancelled&&!b.paused&&(dateOnly(b.due||today)||today)>today).forEach(b=>{let next=dateOnly(b.due||today)||today,guard=0;while(next<=end&&guard++<14){forecastCommitments+=n(b.amount);next=addMonth(next);}});
     const expected=Array.isArray(d.expectedIncome)?d.expectedIncome.filter(x=>x&&!x.received&&!x.cancelled&&dateOnly(x.date)&&dateOnly(x.date)>=today&&dateOnly(x.date)<=end):[];
     const expectedIncome=sum(expected,x=>x.amount)+sum(pendingTx.filter(x=>x.type==='income'&&x.date&&dateOnly(x.date)&&dateOnly(x.date)>=today&&dateOnly(x.date)<=end),x=>x.amount);
     const actualDailyTx=posted.filter(x=>x.type==='expense'&&!x.billId&&!x.billTransactionId&&(!x.date||!dateOnly(x.date)||dateOnly(x.date)>=start&&dateOnly(x.date)<=today));
