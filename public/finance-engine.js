@@ -2,8 +2,10 @@
    Semantics: posted transactions change cash; unpaid bills/pending expenses are reserves;
    savings goals are protected allocations, not expenses; recurring bills forecast future cycles. */
 (function(){
-  const n = v => Number.isFinite(Number(v)) ? Math.max(0, Math.round(Number(v)*100)/100) : 0;
-  const sum = (xs, fn) => xs.reduce((s,x)=>s+n(fn(x)),0);
+  const MAX_MONEY = Number.MAX_SAFE_INTEGER / 100;
+  const n = v => { const value=Number(v); return Number.isFinite(value)&&value>0&&value<=MAX_MONEY ? Math.round(value*100)/100 : 0; };
+  // Add money in integer paise and saturate before exceeding safe integer precision.
+  const sum = (xs, fn) => xs.reduce((paise,x)=>Math.min(Number.MAX_SAFE_INTEGER,paise+Math.round(n(fn(x))*100)),0)/100;
   const dateOnly = d => { const x=new Date(d); if(Number.isNaN(x.getTime())) return null; x.setHours(0,0,0,0); return x; };
   const dayKey = d => { const x=new Date(d); return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0'); };
   const addMonth = d => { const x=new Date(d); const day=x.getDate(); x.setDate(1); x.setMonth(x.getMonth()+1); const last=new Date(x.getFullYear(),x.getMonth()+1,0).getDate(); x.setDate(Math.min(day,last)); return x; };
@@ -65,13 +67,23 @@
   }
   function validateState(raw, defaults){
     const d=raw&&typeof raw==='object'?raw:{};
-    const validRows=(key)=>Array.isArray(d[key])?d[key].filter(x=>x&&typeof x==='object').map(x=>({...x})).slice(0,5000):defaults[key];
+    // Do not truncate legitimate histories: 100k+ transactions are supported.
+    const validRows=(key)=>Array.isArray(d[key])?d[key].filter(x=>x&&typeof x==='object').map(x=>({...x})):defaults[key];
+    const seenIds=new Set();
+    const transactions=validRows('transactions')
+      .filter(x=>Number.isFinite(Number(x.amount))&&Number(x.amount)>=0&&Number(x.amount)<=MAX_MONEY&&['income','expense','adjustment'].includes(x.type))
+      .map((x,i)=>{
+        let id=typeof x.id==='string'&&x.id.trim()?x.id.trim():'legacy-tx-'+i;
+        if(seenIds.has(id)){let suffix=1,base=id;while(seenIds.has(id=base+'-duplicate-'+suffix))suffix++;}
+        seenIds.add(id);
+        return {...x,id,amount:Math.round(Number(x.amount)*100)/100};
+      });
     return {...defaults,...d,
-      budget:Number.isFinite(Number(d.budget))&&Number(d.budget)>=0?Math.round(Number(d.budget)*100)/100:defaults.budget,
+      budget:Number.isFinite(Number(d.budget))&&Number(d.budget)>=0&&Number(d.budget)<=MAX_MONEY?Math.round(Number(d.budget)*100)/100:defaults.budget,
       days:Number.isFinite(Number(d.days))&&Number(d.days)>=1?Math.min(365,Math.floor(Number(d.days))):defaults.days,
-      transactions:validRows('transactions').filter(x=>Number.isFinite(Number(x.amount))&&Number(x.amount)>=0&&['income','expense','adjustment'].includes(x.type)),
-      bills:validRows('bills').filter(x=>Number.isFinite(Number(x.amount))&&Number(x.amount)>=0),
-      goals:validRows('goals').filter(x=>Number.isFinite(Number(x.target))&&Number(x.target)>0&&Number.isFinite(Number(x.saved))&&Number(x.saved)>=0),
+      transactions,
+      bills:validRows('bills').filter(x=>Number.isFinite(Number(x.amount))&&Number(x.amount)>=0&&Number(x.amount)<=MAX_MONEY),
+      goals:validRows('goals').filter(x=>Number.isFinite(Number(x.target))&&Number(x.target)>0&&Number(x.target)<=MAX_MONEY&&Number.isFinite(Number(x.saved))&&Number(x.saved)>=0&&Number(x.saved)<=MAX_MONEY),
       expectedIncome:validRows('expectedIncome'),
       lang:['English','Tamil','Hindi','Telugu','Malayalam','Bengali'].includes(d.lang)?d.lang:defaults.lang,
       theme:['system','light','dark'].includes(d.theme)?d.theme:defaults.theme
