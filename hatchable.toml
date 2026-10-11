@@ -1,0 +1,5 @@
+# Hatchable project manifest. This file marks the folder as a
+# Hatchable project and declares the services it uses.
+# Reference: https://hatchable.com/docs/developers/config
+name = "barely. — Broke But Functional"
+description = "A premium, local-first Gen Z financial decision dashboard for making a ₹10,000 budget last 30 days, with transactions, decision simulation, spending insights, goals and multilingual UI."
