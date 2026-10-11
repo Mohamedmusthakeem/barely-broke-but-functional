@@ -42,7 +42,7 @@
       } else if(due<=end) forecastCommitments+=amount;
     });
     const expected=Array.isArray(d.expectedIncome)?d.expectedIncome.filter(x=>x&&!x.received&&!x.cancelled&&dateOnly(x.date)&&dateOnly(x.date)>=today&&dateOnly(x.date)<=end):[];
-    const expectedIncome=sum(expected,x=>x.amount);
+    const expectedIncome=sum(expected,x=>x.amount)+sum(pendingTx.filter(x=>x.type==='income'&&x.date&&dateOnly(x.date)&&dateOnly(x.date)>=today&&dateOnly(x.date)<=end),x=>x.amount);
     const actualDailyTx=posted.filter(x=>x.type==='expense'&&!x.billTransactionId&&(!x.date||!dateOnly(x.date)||dateOnly(x.date)>=start&&dateOnly(x.date)<=today));
     const discretionarySpent=sum(actualDailyTx,x=>x.amount);
     const elapsedSafe=Math.max(1,Math.min(days,elapsed+1));
