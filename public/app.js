@@ -31,6 +31,41 @@ function update(p){setData(d=>({...d,...(typeof p==='function'?p(d):p)}))}
 function notify(message,error=false){setToast({message,error})}
 function icon(name,size){return html`<i data-lucide=${name} style=${size?{width:size,height:size}:null}></i>`}
 useEffect(()=>{if(window.lucide)window.lucide.createIcons()},[page,modal,data,toast]);
+useEffect(()=>{
+ const finePointer=window.matchMedia&&window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+ const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ if(!finePointer||reduced)return;
+ const cards=Array.from(document.querySelectorAll('.hero,.decision-box'));
+ const cleanups=[];
+ cards.forEach(el=>{
+   let frame=0,px=0,py=0;
+   const move=e=>{
+     const r=el.getBoundingClientRect();
+     px=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));
+     py=Math.max(0,Math.min(1,(e.clientY-r.top)/r.height));
+     if(frame)return;
+     frame=requestAnimationFrame(()=>{
+       frame=0;
+       el.style.setProperty('--pointer-x',(px*100).toFixed(1)+'%');
+       el.style.setProperty('--pointer-y',(py*100).toFixed(1)+'%');
+       if(el.classList.contains('hero')){
+         const rx=(.5-py)*4,ry=(px-.5)*5;
+         el.style.transform='perspective(1100px) rotateX('+rx.toFixed(2)+'deg) rotateY('+ry.toFixed(2)+'deg) translateY(-1px)';
+       }
+     });
+   };
+   const leave=()=>{
+     if(frame){cancelAnimationFrame(frame);frame=0}
+     el.style.transform='';
+     el.style.setProperty('--pointer-x','78%');
+     el.style.setProperty('--pointer-y','20%');
+   };
+   el.addEventListener('pointermove',move,{passive:true});
+   el.addEventListener('pointerleave',leave,{passive:true});
+   cleanups.push(()=>{el.removeEventListener('pointermove',move);el.removeEventListener('pointerleave',leave);leave()});
+ });
+ return()=>cleanups.forEach(fn=>fn());
+},[page,data]);
 function calculate(d){return window.BarelyFinance.calculate(d)}
 function transact(tx){const amount=Math.round(Number(tx.amount)*100)/100,date=tx.date||today();if(!tx.name||!tx.name.trim()||!Number.isFinite(amount)||amount<=0){notify('Enter a description and an amount above ₹0.',true);return}if(!['income','expense'].includes(tx.type)){notify('Choose income or expense.',true);return}const normalized={...tx,name:tx.name.trim(),amount,date,status:date>today()?'pending':'posted'};update(d=>({...d,transactions:editing?d.transactions.map(x=>x.id===editing.id?{...normalized,id:editing.id,createdAt:x.createdAt||Date.now()}:x):[{...normalized,id:uid(),createdAt:Date.now()},...d.transactions]}));setModal(null);setEditing(null);notify(editing?'Transaction updated':'Transaction saved')}
 function deleteTx(id){if(!confirm('Delete this transaction? Your totals will update.'))return;const tx=data.transactions.find(x=>x.id===id);update(d=>({...d,transactions:d.transactions.filter(x=>x.id!==id),bills:tx&&tx.billId?d.bills.map(b=>b.id===tx.billId?{...b,paid:false}:b):d.bills}));notify('Transaction deleted'+(tx&&tx.billId?' · linked bill reopened':'') )}
