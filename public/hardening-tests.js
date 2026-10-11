@@ -6,7 +6,7 @@ const defaults=()=>({budget:10000,days:30,startDate:today(),transactions:[],bill
 const tests=[];
 function assert(name,condition,detail){tests.push({name,pass:!!condition,detail:detail||""})}
 function time(fn){const start=performance.now();const value=fn();return {value,ms:performance.now()-start}}
-function csvCell(value){return '"'+String(value??"").replace(/"/g,'""')+'"'}
+function csvCell(value){let text=String(value??"");if(["=","+","-","@"].includes(text.trimStart().charAt(0)))text="'"+text;return '"'+text.replace(/"/g,'""')+'"'}
 button.addEventListener("click",()=>{
  button.disabled=true;tests.length=0;status.textContent="Running isolated tests…";result.textContent="";
  try{
@@ -49,6 +49,7 @@ button.addEventListener("click",()=>{
   assert("100k Unicode search correctness",matches.length===1000,"expected 1,000 Tamil matches, got "+matches.length);
   const exported=big.transactions.filter(x=>x.name.includes('"')||x.name.includes(",")||x.name.includes("தமிழ"));
   assert("CSV escaping coverage set includes Unicode/special characters",exported.length>0,"special characters are present in synthetic test data");
+  assert("CSV formula injection is neutralized",csvCell("=1+1")==="\"\'=1+1\""&&csvCell("  @SUM(A1:A2)")==="\"\'  @SUM(A1:A2)\""&&csvCell("QA, \"Income\"")==="\"QA, \"\"Income\"\"\"","dangerous formula prefixes are quoted as text and commas/quotes remain escaped");
   const fails=tests.filter(x=>!x.pass);
   status.textContent=fails.length?"Completed with "+fails.length+" failure(s).":"All "+tests.length+" assertions passed.";
   status.className=fails.length?"fail":"pass";
