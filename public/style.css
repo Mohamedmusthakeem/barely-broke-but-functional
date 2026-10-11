@@ -121,7 +121,15 @@ select option{background:var(--white);color:var(--ink)}
 .brand,.mobile-top,.challenge strong,.nav-label,.eyebrow,.page-head h1,.panel-title,.coach h3,.modal h2,.subhead,.health-score,.health-ring strong,.budget-number,.decision-box strong{font-family:'Space Grotesk','Plus Jakarta Sans',system-ui,sans-serif}
 body,button,input,select,textarea,.panel-sub,.page-head p,.form-field label,.tx-amount small,.coach p,.settings-row p{font-family:'Plus Jakarta Sans',system-ui,-apple-system,'Noto Sans Tamil','Noto Sans Devanagari','Noto Sans Telugu','Noto Sans Malayalam','Noto Sans Bengali',sans-serif}
 .brand small,.nav-label,.eyebrow,.runway-days,.table th,.tx-amount,.balance,.stat-value,.health-score,.budget-number{font-family:'IBM Plex Mono',ui-monospace,monospace}
+.hero{isolation:isolate}
+.binary-orbits-canvas{position:absolute;z-index:0;inset:0;width:100%;height:100%;display:block;pointer-events:none;opacity:.68;mix-blend-mode:screen;mask-image:linear-gradient(90deg,transparent 12%,rgba(0,0,0,.18) 29%,#000 49%,#000 100%);-webkit-mask-image:linear-gradient(90deg,transparent 12%,rgba(0,0,0,.18) 29%,#000 49%,#000 100%)}
+.hero .hero-content{position:relative;z-index:2;min-width:0}
+.hero .hero-right{z-index:2}
+@media(max-width:720px){
+ .binary-orbits-canvas{opacity:.42;mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.2) 20%,#000 70%);-webkit-mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.2) 20%,#000 70%)}
+}
 @media(prefers-reduced-motion:reduce){
  .hero,.decision-box,.stat,.panel,.btn{transition:none!important;transform:none!important}
  .hero:after{display:none}
+ .binary-orbits-canvas{opacity:.4}
 }
