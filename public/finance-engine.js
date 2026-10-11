@@ -31,13 +31,13 @@
     const committed=sum(unpaid,x=>x.amount);
     const savings=sum(goals,x=>x.saved);
     const spendable=Math.round((balance-committed-savings-pendingOutflows)*100)/100;
-    let forecastCommitments=0,upcoming=0,essential=0,recurringMonthly=0;
+    let forecastCommitments=0,upcoming=0,essential=0;
+    const recurringMonthly=sum(bills.filter(b=>b&&!b.cancelled&&!b.paused&&b.recurring),b=>b.amount);
     unpaid.forEach(b=>{
       const amount=n(b.amount),due=dateOnly(b.due||today)||today;
       if(due>=today&&due<=end){upcoming+=amount;}
       if(b.essential) essential+=amount;
       if(b.recurring){
-        recurringMonthly+=amount;
         let next=due<today?new Date(today):new Date(due);
         let guard=0;
         while(next<=end&&guard++<14){forecastCommitments+=amount;next=addMonth(next);}
